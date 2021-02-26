@@ -1,7 +1,7 @@
 # CoSA
 Coronavirus (SARS-Cov-2) sequencing analysis
 
-Last Updated: 02.23.2020 (v8.5.0)
+Last Updated: 02.26.2020 (v8.5.0)
 
 [Stable version of CoSA under PacBio's GitHub](https://github.com/pacificbiosciences/CoSA)
 
@@ -50,7 +50,7 @@ CoSA is a set of Python and R scripts for analyzing SARS-CoV-2 sequences from Pa
 To install, clone the repo and install:
 
 ```
-$ git clone https://github.com/Magdoll/CoSA.git
+$ git clone https://github.com/PacificBiosciences/CoSA.git
 $ cd CoSA
 $ python setup.py build
 $ python setup.py install
