@@ -24,13 +24,13 @@ def main(parser):
 
     if args.noCSV and args.sqlite3 is None:
         raise ConsensusVariants_Error('No outputs defined with "--noCSV" and no sqlite3 db input')
-        
+
     if xor(args.hifiSupport is None,args.read_info is None):
         raise ConsensusVariants_Error('Use both hifiSupport and read_info together')
 
     print('Loading Reference...')
     aligner = Aligner(args.reference,preset=None) #disabled presets at the moment
-    
+
     sMap     = sampleMap(args.sampleMap)
     dtime    = args.datetime if args.datetime else getNow()
     alleles  = []
@@ -41,7 +41,7 @@ def main(parser):
         if args.progress:
             print(f'Processing {consensusFa}')
         for rec in pysam.FastxFile(consensusFa):
-            aln = aligner(rec,skipFailed=(consensusType == 'failed')) 
+            aln = aligner(rec,skipFailed=(consensusType == 'failed'))
             if aln is None:
                 continue #skip failed consensus if they do not map
             nameDict  = parseName(rec)
@@ -73,7 +73,7 @@ def main(parser):
                                       'runName'  :args.runName,
                                       'bioSample':sample,
                                       'barcode'  :bc}))
-    
+
     alleles_out = pd.DataFrame(alleles).set_index('uuid')
     variant_out = pd.concat(variants)
 
@@ -91,7 +91,7 @@ def main(parser):
 
     if not args.noCSV:
         alleles_out.to_csv(f'{args.prefix}_alleles.csv')
-        variant_out.to_csv(f'{args.prefix}_variants.csv')        
+        variant_out.to_csv(f'{args.prefix}_variants.csv')
     if args.sqlite3:
         import time,sqlite3,sqlalchemy
         engine = sqlalchemy.create_engine(f'sqlite:///{args.sqlite3}', echo=False)
@@ -107,7 +107,7 @@ def main(parser):
             maxtries = 20
             while tries < maxtries:
                 try:
-                    pbaa.set_index('uuid').to_sql(sqldf, con=engine, if_exists='append')        
+                    pbaa.set_index('uuid').to_sql(sqldf, con=engine, if_exists='append')
                     break
                 #except sqlite3.OperationalError as e:
                 except sqlalchemy.exc.OperationalError as e:
@@ -117,7 +117,7 @@ def main(parser):
                         raise ConsensusVariants_Error(f'Unable to import {pydf.source.unique()} to {args.sqlite3}')
                     else:
                         time.sleep(2)
-                    
+
     return alleles_out,variant_out
 
 class Aligner:
@@ -131,7 +131,7 @@ class Aligner:
             #self.kwargs['scoring'] = (1,2,2,1,32,0) # (A,B,o,e,O,E)
             self.kwargs['scoring'] = (1,2,2,1,18,0) # (A,B,o,e,O,E)
         self._aligner = mp.Aligner(**self.kwargs)
-    
+
     def __call__(self,rec,skipFailed=True):
         try:
             return list(filter(lambda a:a.is_primary,self._aligner.map(seq=rec.sequence,cs=True)))[0]
@@ -155,7 +155,7 @@ def makeVarTable(aln,key):
 
 
 def addRefCalls(variants,alleles):
-    #query to find ref-call consensus reads that span variants 
+    #query to find ref-call consensus reads that span variants
     qry = 'chrom==@ctg \
          & alnStart < @pos <= alnStop \
          & uuid not in @vnts.index.get_level_values("uuid")'
@@ -166,7 +166,7 @@ def addRefCalls(variants,alleles):
                                   'VAR' : '.'}
                                  for (ctg,pos),vnts in variants.groupby(['CHR','POS'])
                                  for uuid in alleles.query(qry).index])\
-                     .set_index((['uuid','CHR','POS']))    
+                     .set_index((['uuid','CHR','POS']))
         return pd.concat([variants,refCalls])
     except KeyError: #no records to add
         return variants
@@ -186,7 +186,7 @@ def parseName(rec):
     return resDict
 
 def parseCS(csString,start=0,zeroIndex=True):
-    ops = ':*-+~' 
+    ops = ':*-+~'
     op  = None
     val = ''
     i   = start + int(zeroIndex)
@@ -329,7 +329,7 @@ class sampleMap:
             return (lambda bc: 'None')
         else:
             self.sMap      = dict(pd.read_csv(mapFile)[DEFAULTSMAPNAMES].values)
-            self.remaining = list(self.sMap.items()) 
+            self.remaining = list(self.sMap.items())
             return self._getSample
     _UNK='unknown_sample'
     def _getSample(self,bc):
@@ -384,11 +384,10 @@ READINFOCOLS = ['readName',
                 'Score',
                 'ScoreParts',
                 'Sample',
-                'VarString',
+                'length',
+                'avgQuality',
                 'ClusterId',
-                'ClusterProb',
-                'ClusterSize',
-                'ChimeraScore']
+                'ClusterSize']
 
 
 if __name__ == '__main__':
@@ -429,6 +428,3 @@ if __name__ == '__main__':
     except ConsensusVariants_Error as e:
         print(f'\nERROR: {e}\n')
         sys.exit(1)
-
-
-
