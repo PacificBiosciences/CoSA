@@ -216,6 +216,7 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("ref_fasta", help="Reference fasta (should be Wuhan ref)")
     parser.add_argument("prefix", help="Sample prefix")
+    parser.add_argument("--sample-name", default=None, help="Optional sample name, if different from prefix")
     parser.add_argument("--input_depth", default=None, help="(optional) Input depth file, if not given, then <prefix>.bam.depth is expected.")
     parser.add_argument("--input_vcf", default=None, help="(optional) Input VCF file, if not given, then <prefix>.VCF is expected.")
     parser.add_argument("-c", "--min_coverage", type=int, default=4, help="Minimum base coverage to call a base (default: 4)")
@@ -248,6 +249,8 @@ if __name__ == "__main__":
         sys.exit(-1)
 
     prefix = args.prefix # ex: LC0003335
+    if args.sample_name:
+        prefix = args.sample_name
     newid = prefix + "_VCFConsensus"
 
     genVCFcons(args.ref_fasta, depth_file, vcf_input, args.prefix,
