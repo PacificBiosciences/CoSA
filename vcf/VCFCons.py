@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = '8.5.0'
+__version__ = '8.5.1'
 #import pdb
 import os, sys
 from collections import Counter
@@ -94,6 +94,8 @@ def genVCFcons(ref_fasta, depth_file, vcf_input, prefix, newid,
     f_variant = open(prefix+'.vcfcons.variants.csv', 'w')
     variant_writer = DictWriter(f_variant, fieldnames=VARIANT_FIELDS, delimiter='\t')
     variant_writer.writeheader()
+    lastDelEnd = -1
+    lastDelCov = -1
     for v in vcf_reader:
         # deepvariant has this weird record of RefCalls, ignore them
         if vcf_type == 'deepvariant' and v.FILTER == ['RefCall']: continue
@@ -134,6 +136,18 @@ def genVCFcons(ref_fasta, depth_file, vcf_input, prefix, newid,
         if delta==0: t = 'SUB'
         elif delta>0: t = 'INS'
         else: t = 'DEL'
+
+        # set the last deletion end and last deletion coverage
+        if t == 'DEL':
+            lastDelEnd = v.POS + abs(delta)
+            lastDelCov = total_cov
+        else:
+            # the variant (SNV/Insertion) starts before the last deletion ends, it's contained
+            if (v.POS < lastDelEnd) and (vcf_type == 'bcftools'):
+                # keep the maximum coverage, i.e. the spanning read coverage.
+                total_cov = max(total_cov, lastDelCov)
+        # recalculate frequency
+        alt_freq = alt_count * 1. / total_cov
 
         if total_cov < min_coverage:
             print("INFO: For {0}: Ignore variant {1}:{2}->{3} because total cov is {4}.".format(prefix, v.POS, _ref, _alt, total_cov))

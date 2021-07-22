@@ -8,11 +8,12 @@ Last Updated: 02.26.2020 (v8.5.0)
 [Developing version of CoSA under Magdoll's GitHub](https://github.com/Magdoll/CoSA)
 
 Join the [COVID19 Google Group](https://groups.google.com/g/smrt_covid19) to stay up-to-date on bioinfx recommendations and CoSA changes!
- 
+
 
 ## Updates
+07.21.2021    8.5.1. adjust depth for snps spanned by deletions. 
 
-02.26.2020    v8.5.0 release. cleaned up unnecesary directories.
+02.26.2020    v8.5.0 release. cleaned up unnecessary directories.
 
 02.23.2020    v8.4.0 release. `pbaa2vcf.py` format update fix.
 
