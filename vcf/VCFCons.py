@@ -146,6 +146,8 @@ def genVCFcons(ref_fasta, depth_file, vcf_input, prefix, newid,
             if v.POS < lastDelEnd:
                 # keep the maximum coverage, i.e. the spanning read coverage.
                 total_cov = max(total_cov, lastDelCov)
+        # recalculate frequency        
+        alt_freq = alt_count * 1. / total_cov
 
         if total_cov < min_coverage:
             print("INFO: For {0}: Ignore variant {1}:{2}->{3} because total cov is {4}.".format(prefix, v.POS, _ref, _alt, total_cov))
