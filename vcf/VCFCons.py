@@ -148,7 +148,7 @@ def genVCFcons(ref_fasta, depth_file, vcf_input, prefix, newid,
             lastDelCov = total_cov
         else:
             # the variant (SNV/Insertion) starts before the last deletion ends, it's contained
-            if (v.POS < lastDelEnd) and (vcf_type == 'bcftools'):
+            if (v.POS <= lastDelEnd) and (vcf_type == 'bcftools'):
                 # keep the maximum coverage, i.e. the spanning read coverage.
                 total_cov = max(total_cov, lastDelCov)
         # recalculate frequency
