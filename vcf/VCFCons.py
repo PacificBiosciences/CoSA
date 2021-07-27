@@ -208,7 +208,7 @@ def genVCFcons(ref_fasta, depth_file, vcf_input, prefix, newid,
     if varaint_count == 0:
         prob_multi = 0.0
     mso = open(output_multi_strain, 'w')
-    mso.write('multi_strain_variant_count,total_variant_count,probability_multistrain')
+    mso.write('multi_strain_variant_count,total_variant_count,probability_multistrain\n')
     mso.write('{0},{1},{2}'.format(multi_strain_count,varaint_count,prob_multi ))
     mso.close()
 
