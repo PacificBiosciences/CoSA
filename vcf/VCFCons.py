@@ -204,7 +204,11 @@ def genVCFcons(ref_fasta, depth_file, vcf_input, prefix, newid,
     # The cumulative density of observing `multi_strain_count` or fewer
     # under and fixed probability of 0.2
     prob_multi = binom.cdf(multi_strain_count, varaint_count, 0.2)
+    # hard coding for zero variants
+    if varaint_count == 0:
+        prob_multi = 0.0
     mso = open(output_multi_strain, 'w')
+    mso.write('multi_strain_variant_count,total_variant_count,probability_multistrain')
     mso.write('{0},{1},{2}'.format(multi_strain_count,varaint_count,prob_multi ))
     mso.close()
 
