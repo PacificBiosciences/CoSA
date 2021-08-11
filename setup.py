@@ -2,7 +2,7 @@ from setuptools import setup, Extension, find_packages
 import sys
 
 __author__ = "etseng@pacb.com"
-__version__ = "8.5.0"
+__version__ = "8.5.2"
 
 
 setup(
@@ -19,6 +19,7 @@ setup(
                    'cosa.vcf': 'vcf'},
     install_requires=[
         'biopython',
+        'scipy'
         ],
     scripts = ['cosa/clean_up_metadata.py',
                'cosa/filter_gappedshort.py',

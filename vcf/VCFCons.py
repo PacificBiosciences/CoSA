@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-__version__ = '8.5.0'
+__version__ = '8.5.2'
 #import pdb
 import os, sys
 from collections import Counter
 from csv import DictWriter
 from Bio import SeqIO
 import vcf
+from scipy.stats import binom
 
 VARIANT_FIELDS = ['Pos', 'Type', 'Length', 'Depth', 'AltCount']
 
@@ -55,7 +56,7 @@ def get_alt_count_pbaa(num_gt, x, name):
 
 def genVCFcons(ref_fasta, depth_file, vcf_input, prefix, newid,
                min_coverage=4, min_alt_freq=0.5, min_qual=100,
-               vcf_type=None):
+               vcf_type=None, min_multi_strain_frq=0.1):
     """
     :param ref_fasta: should be the Wuhan reference
     :param depth_file: <sample>.bam.depth of per base coverage
@@ -64,11 +65,13 @@ def genVCFcons(ref_fasta, depth_file, vcf_input, prefix, newid,
     :param min_coverage: below this coverage bases will be 'N'
     :param min_alt_freq: below this ALT frequency bases will use the reference instead
     :param vcf_type: choices are pbaa, CLC, deepvariant (standard)
+    :param min_multi_strain_frq the minimum frequency for multi-strain variants
     :return:
     """
     output_fasta = prefix + '.vcfcons.fasta'
     output_frag_fasta = prefix + '.vcfcons.frag.fasta'
     output_info = prefix + '.vcfcons.info.csv'
+    output_multi_strain = prefix + '.multistrain.info.csv'
 
     ref = next(SeqIO.parse(open(ref_fasta),'fasta'))
     refseq = str(ref.seq)
@@ -94,6 +97,10 @@ def genVCFcons(ref_fasta, depth_file, vcf_input, prefix, newid,
     f_variant = open(prefix+'.vcfcons.variants.csv', 'w')
     variant_writer = DictWriter(f_variant, fieldnames=VARIANT_FIELDS, delimiter='\t')
     variant_writer.writeheader()
+    lastDelEnd = -1
+    lastDelCov = -1
+    varaint_count = 0
+    multi_strain_count = 0
     for v in vcf_reader:
         # deepvariant has this weird record of RefCalls, ignore them
         if vcf_type == 'deepvariant' and v.FILTER == ['RefCall']: continue
@@ -135,6 +142,19 @@ def genVCFcons(ref_fasta, depth_file, vcf_input, prefix, newid,
         elif delta>0: t = 'INS'
         else: t = 'DEL'
 
+        # set the last deletion end and last deletion coverage
+        if t == 'DEL':
+            lastDelEnd = v.POS + abs(delta)
+            lastDelCov = total_cov
+        else:
+            # the variant (SNV/Insertion) starts before the last deletion ends, it's contained
+            if (v.POS <= lastDelEnd) and (vcf_type == 'bcftools'):
+                # keep the maximum coverage, i.e. the spanning read coverage.
+                total_cov = max(total_cov, lastDelCov)
+        # recalculate frequency
+        alt_freq = alt_count * 1. / total_cov
+
+        # the filters happen here, and the else contains the okay variants
         if total_cov < min_coverage:
             print("INFO: For {0}: Ignore variant {1}:{2}->{3} because total cov is {4}.".format(prefix, v.POS, _ref, _alt, total_cov))
         elif alt_freq < min_alt_freq:
@@ -172,8 +192,25 @@ def genVCFcons(ref_fasta, depth_file, vcf_input, prefix, newid,
                     else:
                         del newseqlist[curpos]
 
+            varaint_count += 1
+            # intermediate frequency variant
+            if min(alt_freq, 1 - alt_freq) > min_multi_strain_frq:
+                multi_strain_count += 1
+
+
     vcf_writer.close()
     f_variant.close()
+
+    # The cumulative density of observing `multi_strain_count` or fewer
+    # under and fixed probability of 0.2
+    prob_multi = binom.cdf(multi_strain_count, varaint_count, 0.2)
+    # hard coding for zero variants
+    if varaint_count == 0:
+        prob_multi = 0.0
+    mso = open(output_multi_strain, 'w')
+    mso.write('multi_strain_variant_count,total_variant_count,probability_multistrain\n')
+    mso.write('{0},{1},{2}'.format(multi_strain_count,varaint_count,prob_multi ))
+    mso.close()
 
     f = open(output_fasta, 'w')
     newseq = make_seq_from_list(newseqlist, 0, len(refseq))
@@ -216,10 +253,12 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("ref_fasta", help="Reference fasta (should be Wuhan ref)")
     parser.add_argument("prefix", help="Sample prefix")
+    parser.add_argument("--sample-name", default=None, help="Optional sample name, if different from prefix")
     parser.add_argument("--input_depth", default=None, help="(optional) Input depth file, if not given, then <prefix>.bam.depth is expected.")
     parser.add_argument("--input_vcf", default=None, help="(optional) Input VCF file, if not given, then <prefix>.VCF is expected.")
     parser.add_argument("-c", "--min_coverage", type=int, default=4, help="Minimum base coverage to call a base (default: 4)")
     parser.add_argument("-f", "--min_alt_freq", type=float, default=0.5, help="Minimum variant frequency (default: 0.5)")
+    parser.add_argument("-m", "--min_multi_strain_frq", type=float, default=0.1, help="Minimum variant frequency to be considered multi-strain (default: 0.1)")
     parser.add_argument("-q", "--min_qual", type=int, default=100, help="Minimum QUAL cutoff (default: 100)")
     parser.add_argument("--vcf_type", required=True, choices=['pbaa', 'deepvariant', 'CLC', 'bcftools'], default=None, help="VCF format info")
 
@@ -248,6 +287,8 @@ if __name__ == "__main__":
         sys.exit(-1)
 
     prefix = args.prefix # ex: LC0003335
+    if args.sample_name:
+        prefix = args.sample_name
     newid = prefix + "_VCFConsensus"
 
     genVCFcons(args.ref_fasta, depth_file, vcf_input, args.prefix,
@@ -255,4 +296,5 @@ if __name__ == "__main__":
                min_coverage=args.min_coverage,
                min_alt_freq=args.min_alt_freq,
                min_qual=args.min_qual,
-               vcf_type=args.vcf_type)
+               vcf_type=args.vcf_type,
+               min_multi_strain_frq=args.min_multi_strain_frq)
