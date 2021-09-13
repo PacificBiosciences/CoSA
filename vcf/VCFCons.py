@@ -192,10 +192,10 @@ def genVCFcons(ref_fasta, depth_file, vcf_input, prefix, newid,
                     else:
                         del newseqlist[curpos]
 
-            if total_cov > 10:
+            if total_cov >= 10:
                 varaint_count += 1
             # intermediate frequency variant
-            if (min(alt_freq, 1 - alt_freq) > min_multi_strain_frq) and total_cov > 10:
+            if (min(alt_freq, 1 - alt_freq) > min_multi_strain_frq) and total_cov >= 10:
                 multi_strain_count += 1
 
 
