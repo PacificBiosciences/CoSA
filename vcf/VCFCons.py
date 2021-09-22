@@ -97,7 +97,7 @@ def genVCFcons(ref_fasta, depth_file, vcf_input, prefix, newid,
     for v in vcf_reader:
         # deepvariant has this weird record of RefCalls, ignore them
         if vcf_type == 'deepvariant' and v.FILTER == ['RefCall']: continue
-        x = v.samples[0]
+        if vcf_type != 'lofreq': x = v.samples[0]
         # DeepVariant is unphased, can be 0/1, 1/1, etc...
         # pbaa is ?????
         try:
@@ -221,7 +221,7 @@ if __name__ == "__main__":
     parser.add_argument("-c", "--min_coverage", type=int, default=4, help="Minimum base coverage to call a base (default: 4)")
     parser.add_argument("-f", "--min_alt_freq", type=float, default=0.5, help="Minimum variant frequency (default: 0.5)")
     parser.add_argument("-q", "--min_qual", type=int, default=100, help="Minimum QUAL cutoff (default: 100)")
-    parser.add_argument("--vcf_type", required=True, choices=['pbaa', 'deepvariant', 'CLC', 'bcftools'], default=None, help="VCF format info")
+    parser.add_argument("--vcf_type", required=True, choices=['pbaa', 'deepvariant', 'CLC', 'bcftools', 'lofreq'], default=None, help="VCF format info")
 
     args = parser.parse_args()
 
