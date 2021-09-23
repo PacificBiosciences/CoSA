@@ -114,6 +114,11 @@ def genVCFcons(ref_fasta, depth_file, vcf_input, prefix, newid,
                 total_cov = v.INFO['DP']
                 alt_count = v.INFO['DP4'][2] + v.INFO['DP4'][3]
                 alt_index = 1
+            elif vcf_type == 'lofreq':
+                ##INFO=<ID=DP4,Number=4,Type=Integer,Description="Number of high-quality ref-forward , ref-reverse, alt-forward and alt-reverse bases">
+                total_cov = v.INFO['DP']
+                alt_count = v.INFO['DP4'][2] + v.INFO['DP4'][3]
+                alt_index = 1
             else:
                 total_cov = x.data.DP
                 alt_count_dict = get_alt_count_std(len(v.ALT)+1, x, "{0}:{1}".format(prefix, v.POS))
