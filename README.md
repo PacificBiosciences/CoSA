@@ -11,7 +11,9 @@ Join the [COVID19 Google Group](https://groups.google.com/g/smrt_covid19) to sta
 
 
 ## Updates
-07.23.2021    8.5.2. add POC for multi-strain detection. 
+09.17.2021    8.5.3. switch to sum(DP4) for large deletions to mitigate depth issues around deletion breakpoints 
+
+07.23.2021    8.5.2. add POC for multi-strain detection.
 
 07.21.2021    8.5.1. adjust depth for snps spanned by deletions.
 

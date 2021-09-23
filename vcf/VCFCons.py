@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = '8.5.2'
+__version__ = '8.5.3'
 #import pdb
 import os, sys
 from collections import Counter
@@ -142,6 +142,11 @@ def genVCFcons(ref_fasta, depth_file, vcf_input, prefix, newid,
         elif delta>0: t = 'INS'
         else: t = 'DEL'
 
+        # clipped bases are counted for some reason in bcftools DP. We are
+        # reestimating depth of coverage using DP4
+        if (t == 'DEL') and (abs(delta) >= 50) and (vcf_type == 'bcftools'):
+            total_cov = sum(v.INFO['DP4'])
+
         # set the last deletion end and last deletion coverage
         if t == 'DEL':
             lastDelEnd = v.POS + abs(delta)
@@ -151,8 +156,8 @@ def genVCFcons(ref_fasta, depth_file, vcf_input, prefix, newid,
             if (v.POS <= lastDelEnd) and (vcf_type == 'bcftools'):
                 # keep the maximum coverage, i.e. the spanning read coverage.
                 total_cov = max(total_cov, lastDelCov)
-        # recalculate frequency
-        alt_freq = alt_count * 1. / total_cov
+        # recalculate frequency, and set a max in case our depth of coverage estimates are off.
+        alt_freq = min(1.0, alt_count * 1. / total_cov)
 
         # the filters happen here, and the else contains the okay variants
         if total_cov < min_coverage:
