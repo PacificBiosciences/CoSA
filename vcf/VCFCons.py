@@ -99,7 +99,7 @@ def genVCFcons(ref_fasta, depth_file, vcf_input, prefix, newid,
     variant_writer.writeheader()
     lastDelEnd = -1
     lastDelCov = -1
-    varaint_count = 0
+    variant_count = 0
     multi_strain_count = 0
     for v in vcf_reader:
         # deepvariant has this weird record of RefCalls, ignore them
@@ -163,6 +163,11 @@ def genVCFcons(ref_fasta, depth_file, vcf_input, prefix, newid,
         if total_cov < min_coverage:
             print("INFO: For {0}: Ignore variant {1}:{2}->{3} because total cov is {4}.".format(prefix, v.POS, _ref, _alt, total_cov))
         elif alt_freq < min_alt_freq:
+            if total_cov >= 10:
+                variant_count += 1
+            # intermediate frequency variant
+            if (min(alt_freq, 1 - alt_freq) > min_multi_strain_frq) and total_cov >= 10:
+                multi_strain_count += 1
             print("INFO: For {0}: Ignore variant {1}:{2}->{3} because alt freq is {4}.".format(prefix, v.POS, _ref, _alt, alt_freq))
         elif v.QUAL is not None and v.QUAL < min_qual:
             print("INFO: For {0}: Ignore variant {1}:{2}->{3} because qual is {4}.".format(prefix, v.POS, _ref, _alt, v.QUAL))
@@ -198,7 +203,7 @@ def genVCFcons(ref_fasta, depth_file, vcf_input, prefix, newid,
                         del newseqlist[curpos]
 
             if total_cov >= 10:
-                varaint_count += 1
+                variant_count += 1
             # intermediate frequency variant
             if (min(alt_freq, 1 - alt_freq) > min_multi_strain_frq) and total_cov >= 10:
                 multi_strain_count += 1
@@ -209,13 +214,13 @@ def genVCFcons(ref_fasta, depth_file, vcf_input, prefix, newid,
 
     # The cumulative density of observing `multi_strain_count` or fewer
     # under and fixed probability of 0.2
-    prob_multi = binom.cdf(multi_strain_count, varaint_count, 0.2)
+    prob_multi = binom.cdf(multi_strain_count, variant_count, 0.2)
     # hard coding for zero variants
-    if varaint_count == 0:
+    if variant_count == 0:
         prob_multi = 0.0
     mso = open(output_multi_strain, 'w')
     mso.write('multi_strain_variant_count,total_variant_count,probability_multistrain\n')
-    mso.write('{0},{1},{2}'.format(multi_strain_count,varaint_count,prob_multi ))
+    mso.write('{0},{1},{2}'.format(multi_strain_count,variant_count,prob_multi ))
     mso.close()
 
     f = open(output_fasta, 'w')
