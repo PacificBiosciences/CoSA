@@ -118,7 +118,7 @@ def genVCFcons(ref_fasta, depth_file, vcf_input, prefix, newid,
                 alt_index, alt_count = alt_count_dict.most_common()[0]
             elif vcf_type == 'bcftools':
                 ##INFO=<ID=DP4,Number=4,Type=Integer,Description="Number of high-quality ref-forward , ref-reverse, alt-forward and alt-reverse bases">
-                total_cov = v.INFO['DP']
+                total_cov = sum(v.INFO['DP4'])
                 alt_count = v.INFO['DP4'][2] + v.INFO['DP4'][3]
                 alt_index = 1
             else:
