@@ -11,11 +11,13 @@ Join the [COVID19 Google Group](https://groups.google.com/g/smrt_covid19) to sta
 
 
 ## Updates
-09.17.2021    8.5.3. switch to sum(DP4) for large deletions to mitigate depth issues around deletion breakpoints 
+01.10.2022    v8.5.4 Updated to use raw read counts for small indel (<50bp) variant call filtering by vcfcons and reduces min_qual of variants to 60.
 
-07.23.2021    8.5.2. add POC for multi-strain detection.
+09.17.2021    v8.5.3 switch to sum(DP4) for large deletions to mitigate depth issues around deletion breakpoints 
 
-07.21.2021    8.5.1. adjust depth for snps spanned by deletions.
+07.23.2021    v8.5.2 add POC for multi-strain detection.
+
+07.21.2021    v8.5.1 adjust depth for snps spanned by deletions.
 
 02.26.2020    v8.5.0 release. cleaned up unnecessary directories.
 

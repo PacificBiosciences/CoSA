@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = '8.5.4'
+__version__ = '8.5.5'
 #import pdb
 import os, sys
 from collections import Counter
@@ -121,8 +121,12 @@ def genVCFcons(ref_fasta, depth_file, vcf_input, prefix, newid,
               
                 # clipped bases are counted for some reason in bcftools DP. We are
                 # reestimating depth of coverage using DP4
-                total_cov = sum(v.INFO['DP4'])
-                alt_count = v.INFO['DP4'][2] + v.INFO['DP4'][3]
+                if v.is_indel:
+                    total_cov = v.INFO['DP']
+                    alt_count = v.INFO['IDV']
+                else:
+                    total_cov = sum(v.INFO['DP4'])
+                    alt_count = v.INFO['DP4'][2] + v.INFO['DP4'][3]
                 alt_index = 1
             else:
                 total_cov = x.data.DP
@@ -145,6 +149,10 @@ def genVCFcons(ref_fasta, depth_file, vcf_input, prefix, newid,
         elif delta>0: t = 'INS'
         else: t = 'DEL'
 
+        #For large indels, sometimes clipped reads are counted as coverage in unfiltered alignments, so use filtered
+        if (t == 'DEL') and (abs(delta) >= 50) and (vcf_type == 'bcftools'):
+            total_cov = sum(v.INFO['DP4'])
+            alt_count = v.INFO['DP4'][2] + v.INFO['DP4'][3]
 
         # set the last deletion end and last deletion coverage
         if t == 'DEL':
