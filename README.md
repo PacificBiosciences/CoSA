@@ -11,13 +11,20 @@ Last Updated: 05.03.2021 (v9.0.0)
 [Developing version of CoSA under Magdoll's GitHub](https://github.com/Magdoll/CoSA)
 
 Join the [COVID19 Google Group](https://groups.google.com/g/smrt_covid19) to stay up-to-date on bioinfx recommendations and CoSA changes!
- 
+
 
 ## Updates
+01.10.2022    v8.5.4 Updated to use raw read counts for small indel (<50bp) variant call filtering by vcfcons and reduces min_qual of variants to 60.
+
+09.17.2021    v8.5.3 switch to sum(DP4) for large deletions to mitigate depth issues around deletion breakpoints 
+
+07.23.2021    v8.5.2 add POC for multi-strain detection.
+
+07.21.2021    v8.5.1 adjust depth for snps spanned by deletions.
 
 05.03.2021    v9.0.0 release. `trim_MIPs.py` added.
 
-02.26.2021    v8.5.0 release. cleaned up unnecesary directories.
+02.26.2021    v8.5.0 release. cleaned up unnecessary directories.
 
 02.23.2021    v8.4.0 release. `pbaa2vcf.py` format update fix.
 
@@ -55,7 +62,7 @@ CoSA is a set of Python and R scripts for analyzing SARS-CoV-2 sequences from Pa
 To install, clone the repo and install:
 
 ```
-$ git clone https://github.com/<ACCOUNT>/CoSA.git
+$ git clone https://github.com/PacificBiosciences/CoSA.git
 $ cd CoSA
 $ python setup.py build
 $ python setup.py install

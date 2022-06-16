@@ -19,6 +19,7 @@ setup(
                    'cosa.vcf': 'vcf'},
     install_requires=[
         'biopython',
+        'scipy'
         ],
     scripts = ['cosa/clean_up_metadata.py',
                'cosa/filter_gappedshort.py',
